@@ -28,9 +28,9 @@ struct abb {
  * *****************************************************************/
 nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave) {
 	if (!root) return NULL;
-	int cmpresul = cmp(root->clave, clave);
-	if (cmpresul == 0) return root;
-	if (cmpresul < 0) return buscar_nodo(root->der, cmp, clave);
+	int cmp_result = cmp(root->clave, clave);
+	if (cmp_result == 0) return root;
+	if (cmp_result < 0) return buscar_nodo(root->der, cmp, clave);
 	return buscar_nodo(root->izq, cmp, clave);
 }
 
