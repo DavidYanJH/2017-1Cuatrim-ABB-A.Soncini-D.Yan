@@ -1,9 +1,7 @@
-//#include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
-//#include <stdbool.h>
-//#include <stddef.h>
+#include <string.h>
 #include "abb.h"
+
 
 typedef struct nodo nodo_abb_t;
 
@@ -26,14 +24,13 @@ struct abb {
 /* ******************************************************************
  *            DECLARACION DE LAS FUNCIONES AUXILIARES
  * *****************************************************************/
-nodo_abb_t* buscar_nodo(nodo_abb_t* nodo, int (*cmp) (const char*, const char*), const char* clave) {
-	if (!nodo) return NULL;
-	int cmp_result = cmp(nodo->clave, clave);
-	if (cmp_result > 0) return buscar_nodo(nodo->izq, cmp, clave);
-	if (cmp_result < 0) return buscar_nodo(nodo->der, cmp, clave);
-	return nodo;
+nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave) {
+	if (!root) return NULL;
+	int cmp_result = cmp(root->clave, clave);
+	if (cmp_result == 0) return root;
+	if (cmp_result < 0) return buscar_nodo(root->der, cmp, clave);
+	return buscar_nodo(root->izq, cmp, clave);
 }
-
 
 nodo_abb_t* nodo_abb_crear(abb_t* abb, nodo_abb_t* padre, const char* clave, void* dato) 
 {
@@ -53,13 +50,12 @@ nodo_abb_t* nodo_abb_crear(abb_t* abb, nodo_abb_t* padre, const char* clave, voi
 	if (padre != NULL)
 	{
 		int cmp_result = abb->comparar_clave(padre->clave, nodo->clave);
-		if (cmp < 0) padre->der = nodo;
+		if (cmp_result < 0) padre->der = nodo;
 		else padre->izq = nodo;
 	}
 	++abb->cantidad_nodos;
 	return nodo;
 }
-
 
 bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* clave, void* dato)
 {
@@ -79,6 +75,11 @@ bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* c
 		abb->destruir_dato(nodo->dato);
 	nodo->dato = dato;
 	return true;
+}
+
+nodo_abb_t* buscarReemplazoDerecho(nodo_abb_t* root) {
+	if (!root->izq) return root;
+	return buscarReemplazoDerecho(root->izq);
 }
 
 /* ******************************************************************
@@ -103,7 +104,7 @@ size_t abb_cantidad(abb_t *abb) {
 
 bool abb_pertenece(const abb_t *abb, const char *clave) {
 	if (!abb) return false;
-	nodo_abb_t* nodo = buscar_nodo(abb->root, abb->comparar_clave, clave, NULL);
+	nodo_abb_t* nodo = buscar_nodo(abb->root, abb->comparar_clave, clave);
 	if (!nodo) return false;
 	return true;
 }
@@ -115,13 +116,62 @@ void *abb_obtener(const abb_t *abb, const char *clave) {
 	return nodo->dato;
 }
 
-/* Guarda un elemento en el abb. Si la clave ya se encuentra en la
- * estructura, la reemplaza. De no poder guardarlo devuelve false.
- * Pre: La estructura abb fue creada.
- * Post: Se almacenó el par (clave, dato). Si se pudo guardar el
- * dato, se devuelve true. Caso contrario, false.
- */
 bool abb_guardar(abb_t *abb, const char *clave, void *dato) {
 	if (!abb) return false;
 	return abb_insertar(abb->root, NULL, abb, clave, dato);
+}
+
+void *abb_borrar(abb_t *abb, const char *clave) {
+	if (!abb) return NULL;
+	nodo_abb_t* nodo_borrar = buscar_nodo(abb->root, abb->comparar_clave, clave);
+	if (!nodo_borrar) return NULL;
+	void* dato = nodo_borrar->dato;
+	char* clave_borrar = nodo_borrar->clave;
+	bool nodo_isleft = (nodo_borrar == nodo_borrar->padre->izq);
+
+	if (!nodo_borrar->padre) {
+		return NULL;
+		//FALTA CONTEMPLAR CASO DE BORRAR RAIZ!!!!
+	}
+	else {
+		//Nodo a borrar no tiene hijos
+		if (!nodo_borrar->izq && !nodo_borrar->der) {
+			if (nodo_isleft)
+				nodo_borrar->padre->izq = NULL;
+			else
+				nodo_borrar->padre->der = NULL;
+		}
+
+		//Nodo a borrar solo tiene hijo izquierdo
+		if (nodo_borrar->izq && !nodo_borrar->der) {
+			if (nodo_isleft)
+				nodo_borrar->padre->izq = nodo_borrar->izq;
+			else
+				nodo_borrar->padre->der = nodo_borrar->izq;
+			nodo_borrar->izq->padre = nodo_borrar->padre;
+		}
+
+		//Nodo a borrar solo tiene hijo derecho
+		if (!nodo_borrar->izq && nodo_borrar->der)  {
+			if (nodo_isleft)
+				nodo_borrar->padre->izq = nodo_borrar->der;
+			else
+				nodo_borrar->padre->der = nodo_borrar->der;
+			nodo_borrar->der->padre = nodo_borrar->padre;
+		}
+
+		//Nodo a borrar tene dos hijos
+		if (nodo_borrar->izq && nodo_borrar->der) {
+			nodo_abb_t* reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
+			nodo_borrar->clave = reemplazo->clave;
+			nodo_borrar->dato = reemplazo->dato;
+			reemplazo->padre->izq = reemplazo->der;
+			if (reemplazo->der)
+				reemplazo->der->padre = reemplazo->padre;
+			nodo_borrar = reemplazo;
+		}
+	}
+	free(clave_borrar);
+	free(nodo_borrar);
+	return dato;
 }
