@@ -71,9 +71,9 @@ bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* c
 	}
 	int cmp_result = abb->comparar_clave(nodo->clave, clave);
 	if (cmp_result > 0) 
-		return abb_insertar(nodo->der, nodo, abb, clave, dato);
-	if (cmp_result < 0) 
 		return abb_insertar(nodo->izq, nodo, abb, clave, dato);
+	if (cmp_result < 0) 
+		return abb_insertar(nodo->der, nodo, abb, clave, dato);
 	
 	// Caso Clave Ya Existente en el ABB
 	if (abb->destruir_dato && nodo->dato) 
