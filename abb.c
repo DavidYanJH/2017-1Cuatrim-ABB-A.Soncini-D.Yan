@@ -181,7 +181,75 @@ void *abb_borrar(abb_t *abb, const char *clave) {
 	
 	free(clave_borrar);
 	free(nodo_borrar);
-	abb->cantidad_nodos--;
 	return dato;
 }
 
+/* ******************************************************************
+ *            ITERADOR DEL ARBOL BINARIO DE BUSQUEDA
+ * *****************************************************************/
+
+// Declaracion de la estructura abb_iter_in
+struct abb_iter {
+	pila_t* pila_abb;
+};
+
+// Funcion Auxiliar Recursviva
+bool pila_cargar_inorder(nodo_abb_t* nodo_actual, pila_t* pila_abb)
+{
+	if (nodo_actual == NULL) return true;
+	if (!pila_apilar(pila_abb, nodo_actual)) return false;
+	return pila_cargar_inorder(nodo_actual->izq, pila_abb);
+}
+
+/* ******************************************************************
+ *            PRIMITIVAS DEL ITERADOR EXTERNO DEL ABB
+ * *****************************************************************/
+abb_iter_t* abb_iter_in_crear(const abb_t* abb)
+{
+	if (!abb || abb_cantidad(abb) == 0) return NULL;
+	abb_iter_t* abb_iter = malloc(sizeof(abb_iter_t));
+	if (!abb_iter) return NULL;
+	abb_iter->pila_abb = pila_crear();
+	if (!abb_iter->pila_abb)
+	{
+		abb_iter_in_destruir(abb_iter);
+		return NULL;
+	}
+	if (!pila_cargar_inorder(abb->root, abb_iter->pila_abb))
+	{
+		abb_iter_in_destruir(abb_iter);
+		return NULL;
+	}
+	return abb_iter;
+}
+
+const char* abb_iter_in_ver_actual(const abb_iter_t* iter)
+{
+	if (!abb_iter) return NULL;
+	if (abb_iter_in_al_final(abb_iter)) return NULL;
+	nodo_abb_t* nodo_actual = pila_ver_tope(abb_iter->pila_abb);
+	return nodo_actual->clave;
+}
+
+bool abb_iter_in_avanzar(abb_iter_t* abb_iter)
+{
+	if (!abb_iter) return false;
+	if (abb_iter_in_al_final(abb_iter)) return false;
+	nodo_abb_t* nodo_actual = pila_desapilar(abb_iter->pila_abb);
+	if (nodo_actual->der) 
+		return pila_cargar_inorder(nodo_actual->der, pila_abb);
+	return true;
+}
+
+bool abb_iter_in_al_final(const abb_iter_t* abb_iter)
+{
+	if (!abb_iter) return true;
+	return (pila_esta_vacia(abb_iter->pila_abb));
+}
+
+void abb_iter_in_destruir(abb_iter* abb_iter)
+{
+	if (!abb_iter) return;
+	if (abb_iter->pila_abb) pila_destruir(abb_iter->pila_abb);
+	free(abb_iter);
+}
