@@ -54,6 +54,10 @@ nodo_abb_t* nodo_abb_crear(abb_t* abb, nodo_abb_t* padre, const char* clave, voi
 		if (cmp_result < 0) padre->der = nodo;
 		else padre->izq = nodo;
 	}
+	else
+	{
+		abb->root = nodo;
+	}
 	++abb->cantidad_nodos;
 	return nodo;
 }
@@ -67,9 +71,9 @@ bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* c
 	}
 	int cmp_result = abb->comparar_clave(nodo->clave, clave);
 	if (cmp_result > 0) 
-		return abb_insertar(nodo->izq, nodo->padre, abb, clave, dato);
+		return abb_insertar(nodo->der, nodo, abb, clave, dato);
 	if (cmp_result < 0) 
-		return abb_insertar(nodo->der, nodo->padre, abb, clave, dato);
+		return abb_insertar(nodo->izq, nodo, abb, clave, dato);
 	
 	// Caso Clave Ya Existente en el ABB
 	if (abb->destruir_dato && nodo->dato) 
