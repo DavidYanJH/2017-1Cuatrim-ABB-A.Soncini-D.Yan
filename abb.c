@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "abb.h"
+#include "pila.h"
 
 
 typedef struct nodo nodo_abb_t;
@@ -116,6 +117,16 @@ void borrarPadreDosHijos(nodo_abb_t* nodo_borrar) {
 	nodo_borrar = reemplazo;
 }
 
+void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* root) {
+	if (!root) return;
+	eliminar_nodo_abb(abb, root->izq);
+	eliminar_nodo_abb(abb, root->der);
+	if (abb->destruir_dato)
+		abb->destruir_dato(root->dato);
+	free(root->clave);
+	free (root);
+}
+
 
 
 /* ******************************************************************
@@ -133,7 +144,7 @@ abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato) {
 	return abb;
 }
 
-size_t abb_cantidad(abb_t *abb) {
+size_t abb_cantidad(const abb_t *abb) {
 	if (!abb) return 0;
 	return abb->cantidad_nodos;
 }
@@ -181,7 +192,15 @@ void *abb_borrar(abb_t *abb, const char *clave) {
 	
 	free(clave_borrar);
 	free(nodo_borrar);
+	abb->cantidad_nodos--;
 	return dato;
+}
+
+void abb_destruir(abb_t* abb) {
+	if (!abb) return;
+	if (abb->root)
+		eliminar_nodo_abb(abb, abb->root);
+	free(abb);
 }
 
 /* ******************************************************************
@@ -223,7 +242,7 @@ abb_iter_t* abb_iter_in_crear(const abb_t* abb)
 	return abb_iter;
 }
 
-const char* abb_iter_in_ver_actual(const abb_iter_t* iter)
+const char* abb_iter_in_ver_actual(const abb_iter_t* abb_iter)
 {
 	if (!abb_iter) return NULL;
 	if (abb_iter_in_al_final(abb_iter)) return NULL;
@@ -237,7 +256,7 @@ bool abb_iter_in_avanzar(abb_iter_t* abb_iter)
 	if (abb_iter_in_al_final(abb_iter)) return false;
 	nodo_abb_t* nodo_actual = pila_desapilar(abb_iter->pila_abb);
 	if (nodo_actual->der) 
-		return pila_cargar_inorder(nodo_actual->der, pila_abb);
+		return pila_cargar_inorder(nodo_actual->der, abb_iter->pila_abb);
 	return true;
 }
 
