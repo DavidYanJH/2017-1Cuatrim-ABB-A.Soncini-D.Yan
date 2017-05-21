@@ -26,12 +26,12 @@ struct abb {
 /* ******************************************************************
  *            DECLARACION DE LAS FUNCIONES AUXILIARES
  * *****************************************************************/
-nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave) {
-	if (!root) return NULL;
-	int cmp_result = cmp(root->clave, clave);
-	if (cmp_result == 0) return root;
-	if (cmp_result < 0) return buscar_nodo(root->der, cmp, clave);
-	return buscar_nodo(root->izq, cmp, clave);
+nodo_abb_t* buscar_nodo(nodo_abb_t* nodo, int (*cmp) (const char*, const char*), const char* clave) {
+	if (!nodo) return NULL;
+	int cmp_result = cmp(nodo->clave, clave);
+	if (cmp_result > 0) return buscar_nodo(nodo->izq, cmp, clave);
+	if (cmp_result < 0) return buscar_nodo(nodo->der, cmp, clave);
+	return nodo;
 }
 
 /*nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, nodo_abb_t (*nodo_crear) (const char*, nodo_abb_t*)) {
@@ -59,7 +59,7 @@ noto_abb_t* nodo_crear(const char* clave, nodo_abb_t* padre, void* dato) {
 	return nodo;
 }
 
-bool nodo_insertar(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, void* dato) {
+/*bool nodo_insertar(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, void* dato) {
 	if (!root) return false;
 	int cmpresul = cmp(root->clave, clave);
 	
@@ -83,7 +83,40 @@ bool nodo_insertar(nodo_abb_t* root, int (*cmp) (const char *, const char *), co
 }
 
 bool nodo_abb_t_crear(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, void* dato)
+*/
 
+bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* clave, void* dato)
+{
+	int cmp_result; // Declaración de la Variable Auxiliar
+	if (!nodo) 
+	{
+		nodo = malloc(sizeof(nodo_abb_t));
+		if (!nodo) return false;
+		nodo->clave = malloc(sizeof(char)*(strlen(clave)+1));
+		if (!nodo->clave)
+		{
+			free(nodo);
+			return false;
+		}
+		strcpy(nodo->clave, clave);
+		nodo->datos = datos;
+		nodo->padre = padre;
+		if (padre != NULL)
+		{
+			cmp_result = abb->comparar_clave(padre->clave, nodo->clave);
+			if (cmp < 0) padre->der = nodo;
+			else padre->izq = nodo;
+		}
+		++abb->cantidad_nodos;
+		return true;
+	}
+	cmp_result = abb->comparar_clave(nodo->clave, clave);
+	if (cmp_result > 0) return abb_insertar(nodo->izq, nodo->padre, abb, clave, dato);
+	if (cmp_result < 0) return abb_insertar(nodo->der, nodo->padre, abb, clave, dato);
+	if (abb->destruir_dato && nodo->dato) abb->destruir_dato(nodo->dato);
+	nodo->dato = dato;
+	return true;
+}
 
 /* ******************************************************************
  *            PRIMITIVAS DEL ARBOL BINARIO DE BUSQUEDA
@@ -116,7 +149,6 @@ void *abb_obtener(const abb_t *abb, const char *clave) {
 	if (!abb) return false;
 	nodo_abb_t* nodo = buscar_nodo(abb->root, abb->comparar_clave, clave);
 	if (!nodo) return NULL;
-
 	return nodo->dato;
 }
 
@@ -128,7 +160,5 @@ void *abb_obtener(const abb_t *abb, const char *clave) {
  */
 bool abb_guardar(abb_t *abb, const char *clave, void *dato) {
 	if (!abb) return false;
-	bool ok = nodo_insertar(abb->root, abb->comparar_clave, clave, dato);
-	if (OK) abb->cantidad_nodos++;
-	return ok;
+	return abb_insertar(abb->root, NULL, abb, clave, dato);
 }
