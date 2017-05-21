@@ -247,7 +247,7 @@ bool abb_iter_in_al_final(const abb_iter_t* abb_iter)
 	return (pila_esta_vacia(abb_iter->pila_abb));
 }
 
-void abb_iter_in_destruir(abb_iter* abb_iter)
+void abb_iter_in_destruir(abb_iter_t* abb_iter)
 {
 	if (!abb_iter) return;
 	if (abb_iter->pila_abb) pila_destruir(abb_iter->pila_abb);
