@@ -6,11 +6,11 @@
 
 typedef struct abb abb_t;
 
-/* tipo de función para comparar claves. No puede ser NULL.
+/* Tipo de función para comparar claves. No puede ser NULL.
 */
 typedef int (*abb_comparar_clave_t) (const char *, const char *);
 
-/* Tipo de función para destruir datos
+/* Tipo de función para destruir datos. Puede ser NULL
 */
 typedef void (*abb_destruir_dato_t) (void *);
 
@@ -85,10 +85,10 @@ typedef struct abb_iter abb_iter_t;
 */
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol);
 
-/* Avanza in-order hacia el siguiente dato del arbol.
+/* Avanza in-order hacia la siguiente clave del arbol.
  * Pre: El iterador fue creado.
  * Post: Devuelve true si se pudo avanzar. Devuelve false si ya se 
- * encontraba al final del arbol.
+ * encontraba al final del arbol o en caso de falta de memoria.
  */
 bool abb_iter_in_avanzar(abb_iter_t *iter);
 
