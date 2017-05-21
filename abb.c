@@ -34,86 +34,49 @@ nodo_abb_t* buscar_nodo(nodo_abb_t* nodo, int (*cmp) (const char*, const char*),
 	return nodo;
 }
 
-/*nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, nodo_abb_t (*nodo_crear) (const char*, nodo_abb_t*)) {
-	if ((!root) && (!nodo_crear)) return NULL;
-	if (!root) {
-		root = nodo_crear(clave, padre);
-		return root;
-	}
-	int cmpresul = cmp(root->clave, clave);
-	if (cmpresul == 0) return root;
-	if (cmpresul < 0) return buscar_nodo(root->der, cmp, clave, nodo_crear);
-	return buscar_nodo(root->izq, cmp, clave, nodo_crear);
-}*/
 
-noto_abb_t* nodo_crear(const char* clave, nodo_abb_t* padre, void* dato) {
-	nodo_abb_t nodo = malloc(sizeof(nodo_abb_t));
+nodo_abb_t* nodo_abb_crear(abb_t* abb, nodo_abb_t* padre, const char* clave, void* dato) 
+{
+	nodo_abb_t* nodo = malloc(sizeof(nodo_abb_t));
 	if (!nodo) return NULL;
-	nodo->clave = mallo(sizeof(char) * strlen(clave) + 1);
-	if (!nodo->clave){
+	nodo->clave = malloc(sizeof(char) * (strlen(clave) + 1));
+	if (!nodo->clave)
+	{
 		free(nodo);
 		return NULL;
 	}
 	strcpy(nodo->clave, clave);
 	nodo->dato = dato;
+	nodo->izq = NULL;
+	nodo->der = NULL;
+	nodo->padre = padre;
+	if (padre != NULL)
+	{
+		int cmp_result = abb->comparar_clave(padre->clave, nodo->clave);
+		if (cmp < 0) padre->der = nodo;
+		else padre->izq = nodo;
+	}
+	++abb->cantidad_nodos;
 	return nodo;
 }
 
-/*bool nodo_insertar(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, void* dato) {
-	if (!root) return false;
-	int cmpresul = cmp(root->clave, clave);
-	
-	if (cmpresul == 0) {
-		root->dato = dato;
-		return true;
-	}
-
-	if (cmpresul < 0) {
-		if (!root->der) {
-			root->der = nodo_crear(clave, root, dato);
-		}
-		nodo_insertar(root->der, cmp, clave, dato);
-	}
-	
-	if (cmpresul > 0) {
-		if (!root->izq)
-			root->izq = nodo_crear(clave, root, dato);
-		nodo_insertar(root->izq, cmp, clave, dato);
-	}
-}
-
-bool nodo_abb_t_crear(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave, void* dato)
-*/
 
 bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* clave, void* dato)
 {
-	int cmp_result; // Declaración de la Variable Auxiliar
 	if (!nodo) 
 	{
-		nodo = malloc(sizeof(nodo_abb_t));
-		if (!nodo) return false;
-		nodo->clave = malloc(sizeof(char)*(strlen(clave)+1));
-		if (!nodo->clave)
-		{
-			free(nodo);
-			return false;
-		}
-		strcpy(nodo->clave, clave);
-		nodo->datos = datos;
-		nodo->padre = padre;
-		if (padre != NULL)
-		{
-			cmp_result = abb->comparar_clave(padre->clave, nodo->clave);
-			if (cmp < 0) padre->der = nodo;
-			else padre->izq = nodo;
-		}
-		++abb->cantidad_nodos;
-		return true;
+		nodo = nodo_abb_crear(abb, padre, clave, dato);
+		return (nodo != NULL);
 	}
-	cmp_result = abb->comparar_clave(nodo->clave, clave);
-	if (cmp_result > 0) return abb_insertar(nodo->izq, nodo->padre, abb, clave, dato);
-	if (cmp_result < 0) return abb_insertar(nodo->der, nodo->padre, abb, clave, dato);
-	if (abb->destruir_dato && nodo->dato) abb->destruir_dato(nodo->dato);
+	int cmp_result = abb->comparar_clave(nodo->clave, clave);
+	if (cmp_result > 0) 
+		return abb_insertar(nodo->izq, nodo->padre, abb, clave, dato);
+	if (cmp_result < 0) 
+		return abb_insertar(nodo->der, nodo->padre, abb, clave, dato);
+	
+	// Caso Clave Ya Existente en el ABB
+	if (abb->destruir_dato && nodo->dato) 
+		abb->destruir_dato(nodo->dato);
 	nodo->dato = dato;
 	return true;
 }
