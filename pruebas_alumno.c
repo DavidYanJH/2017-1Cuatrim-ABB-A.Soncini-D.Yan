@@ -1,10 +1,39 @@
-#include "abb.h"
-#include "testing.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cola.h"
 #include <time.h>
+#include "abb.h"
+#include "cola.h"
+#include "testing.h"
+
+/* ******************************************************************
+ *                   FUNCIONES DE PRUEBA AUXILIARES
+ * *****************************************************************/
+bool visitar_test(const char* clave, void* dato, void* extra) {
+	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
+	strcpy(datocpy, dato);
+	return cola_encolar((cola_t*) extra, datocpy);
+}
+
+bool visitar_test_interrupt(const char* clave, void* dato, void* extra) {
+	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
+	strcpy(datocpy, dato);
+	//Itero hasta el nodo raiz
+	if (strcmp(clave, "5555") == 0)
+		return !cola_encolar((cola_t*) extra, datocpy);
+	return cola_encolar((cola_t*) extra, datocpy);
+}
+
+int strcmpaux (const char* clave, const char* straux) {
+	int intclave = atoi(clave);
+	int intstraux = atoi(straux);
+
+	if (intclave < intstraux)
+		return -1;
+	if (intclave > intstraux)
+		return 1;
+	else return 0;
+}
 
 /* ******************************************************************
  *                        PRUEBAS UNITARIAS
@@ -191,12 +220,6 @@ static void prueba_abb_valor_null(void)
     abb_destruir(abb);
 }
 
-bool visitar_test(const char* clave, void* dato, void* extra) {
-	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
-	strcpy(datocpy, dato);
-	return cola_encolar((cola_t*) extra, datocpy);
-}
-
 static void prueba_abb_iterar_completo()
 {
     abb_t* abb = abb_crear(strcmp, NULL);
@@ -237,15 +260,6 @@ static void prueba_abb_iterar_completo()
     cola_destruir(extra, free);
 
    	abb_destruir(abb);
-}
-
-bool visitar_test_interrupt(const char* clave, void* dato, void* extra) {
-	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
-	strcpy(datocpy, dato);
-	//Itero hasta el nodo raiz
-	if (strcmp(clave, "5555") == 0)
-		return !cola_encolar((cola_t*) extra, datocpy);
-	return cola_encolar((cola_t*) extra, datocpy);
 }
 
 static void prueba_abb_iterar_interrupt()
@@ -291,27 +305,13 @@ static void prueba_abb_iterar_interrupt()
    	abb_destruir(abb);
 }
 
-int strcmpaux (const char* clave, const char* straux) {
-	int intclave = atoi(clave);
-	int intstraux = atoi(straux);
-
-	if (intclave < intstraux)
-		return -1;
-	if (intclave > intstraux)
-		return 1;
-	else return 0;
-}
-
 void prueba_abb_volumen(int size_test) {
-	srand((int) time(NULL));   // should only be called once
-	
+	srand((int) time(NULL));   // should only be called once	
 	int vector[size_test];
-
 	int i;
 	for (i = 0; i < size_test; i++) {
 		vector[i] = (int) rand();      // returns a pseudo-random integer between 0 and RAND_MAX	
 	}
-
 	char* strvec[size_test];
 	for (i = 0; i < size_test; i++) {
 		char aux1[20];
@@ -319,26 +319,18 @@ void prueba_abb_volumen(int size_test) {
 		strvec[i] = malloc(sizeof(char) * strlen(aux1) + 1);
 		strcpy(strvec[i], aux1);
 	}
-
-	abb_t* abb = abb_crear(strcmpaux, NULL);
-
+	abb_t* abb = abb_crear(strcmpaux, free);
 	i = 0;
 	bool ok = true;
-
 	while ((i < size_test) && ok) {
 		ok = abb_guardar(abb, strvec[i], strvec[i]);
 		i++;
 	}
-
 	printf("Cantidad de nodos en abb: %d\n", (int) abb_cantidad(abb));
-
    	cola_t* extra = cola_crear();
-
     abb_in_order(abb, visitar_test, extra);
-
     ok = true;
     char* aux = (char*) cola_desencolar(extra);
-
     while (!cola_esta_vacia(extra) && ok) {
     	char* aux2 = (char*) cola_desencolar(extra);
     	ok = (strcmpaux(aux, aux2) < 0);
@@ -346,15 +338,10 @@ void prueba_abb_volumen(int size_test) {
     	aux = aux2;
     }
     free(aux);
-
     print_test("Cola esta vacia", cola_esta_vacia(extra));
-
-    print_test("Se iteró inorder correctamente", ok);
-    
+    print_test("Se iteró inorder correctamente", ok);  
     cola_destruir(extra, free);
-
-   	abb_destruir(abb);
-		
+   	abb_destruir(abb);		
 }
 
 /* ******************************************************************
@@ -364,7 +351,6 @@ void prueba_abb_volumen(int size_test) {
  void pruebas_abb_alumno(void) {
  	/* Ejecuta todas las pruebas unitarias. */
     prueba_crear_abb_vacio();
-    //prueba_iterar_abb_vacio();
     prueba_abb_insertar();
     prueba_abb_reemplazar();
     prueba_abb_reemplazar_con_destruir();
@@ -374,5 +360,6 @@ void prueba_abb_volumen(int size_test) {
     prueba_abb_iterar_completo();
     prueba_abb_iterar_interrupt();
     prueba_abb_volumen(5000);
+    //prueba_iterar_abb_vacio();
     //prueba_abb_iterar_volumen(5000);
  }
