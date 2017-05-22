@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cola.h"
+#include <time.h>
 
 /* ******************************************************************
  *                        PRUEBAS UNITARIAS
@@ -206,7 +207,6 @@ static void prueba_abb_iterar_completo()
     //Este vector ordenado contiene las claves odenadas de menor a mayor. El resultado del in-order debe ser igual al orden de este vector.
     char *ordenados[] = {"110", "111", "1111", "1113", "1122", "1233", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5555", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
     
-    cola_t* extra = cola_crear();
 
     /* Inserta 25 valores */
     int i = 0;
@@ -219,6 +219,8 @@ static void prueba_abb_iterar_completo()
 
     print_test("Se insertaron todos las duplas valor / clave", ok);
     print_test("Cantidad de elementos insertados es 25", 25 == abb_cantidad(abb));
+
+    cola_t* extra = cola_crear();
 
     abb_in_order(abb, visitar_test, extra);
 
@@ -289,6 +291,72 @@ static void prueba_abb_iterar_interrupt()
    	abb_destruir(abb);
 }
 
+int strcmpaux (const char* clave, const char* straux) {
+	int intclave = atoi(clave);
+	int intstraux = atoi(straux);
+
+	if (intclave < intstraux)
+		return -1;
+	if (intclave > intstraux)
+		return 1;
+	else return 0;
+}
+
+void prueba_abb_volumen(int size_test) {
+	srand((int) time(NULL));   // should only be called once
+	
+	int vector[size_test];
+
+	int i;
+	for (i = 0; i < size_test; i++) {
+		vector[i] = (int) rand();      // returns a pseudo-random integer between 0 and RAND_MAX	
+	}
+
+	char* strvec[size_test];
+	for (i = 0; i < size_test; i++) {
+		char aux1[20];
+		sprintf(aux1, "%d", vector[i]);
+		strvec[i] = malloc(sizeof(char) * strlen(aux1) + 1);
+		strcpy(strvec[i], aux1);
+	}
+
+	abb_t* abb = abb_crear(strcmpaux, NULL);
+
+	i = 0;
+	bool ok = true;
+
+	while ((i < size_test) && ok) {
+		ok = abb_guardar(abb, strvec[i], strvec[i]);
+		i++;
+	}
+
+	printf("Cantidad de nodos en abb: %d\n", (int) abb_cantidad(abb));
+
+   	cola_t* extra = cola_crear();
+
+    abb_in_order(abb, visitar_test, extra);
+
+    ok = true;
+    char* aux = (char*) cola_desencolar(extra);
+
+    while (!cola_esta_vacia(extra) && ok) {
+    	char* aux2 = (char*) cola_desencolar(extra);
+    	ok = (strcmpaux(aux, aux2) < 0);
+    	free(aux);
+    	aux = aux2;
+    }
+    free(aux);
+
+    print_test("Cola esta vacia", cola_esta_vacia(extra));
+
+    print_test("Se iteró inorder correctamente", ok);
+    
+    cola_destruir(extra, free);
+
+   	abb_destruir(abb);
+		
+}
+
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
  * *****************************************************************/
@@ -303,8 +371,8 @@ static void prueba_abb_iterar_interrupt()
     prueba_abb_borrar();
     prueba_abb_clave_vacia();
     prueba_abb_valor_null();
-    //prueba_abb_volumen(5000, true);
     prueba_abb_iterar_completo();
     prueba_abb_iterar_interrupt();
+    prueba_abb_volumen(5000);
     //prueba_abb_iterar_volumen(5000);
  }
