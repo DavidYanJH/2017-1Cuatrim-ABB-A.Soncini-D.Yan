@@ -285,7 +285,10 @@ void abb_iter_in_destruir(abb_iter_t* abb_iter)
 	free(abb_iter);
 }
 
-void abb_in_order(abb_t *abb, bool visitar(const char *, void *, void *), void *extra) {
+/* ******************************************************************
+ *          ITERADOR INTERNO DEL ARBOL BINARIO DE BUSQUEDA
+ * *****************************************************************/
+ void abb_in_order(abb_t *abb, bool visitar(const char *, void *, void *), void *extra) {
 	if (abb->root)
 		iterar_nodo_abb_in(abb->root, visitar, extra);
 }
