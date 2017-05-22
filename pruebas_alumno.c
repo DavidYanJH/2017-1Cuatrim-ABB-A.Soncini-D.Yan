@@ -220,7 +220,7 @@ static void prueba_abb_valor_null(void)
     abb_destruir(abb);
 }
 
-static void prueba_abb_iterar_completo()
+static void prueba_abb_iterar_int_completo()
 {
     abb_t* abb = abb_crear(strcmp, NULL);
 
@@ -262,7 +262,7 @@ static void prueba_abb_iterar_completo()
    	abb_destruir(abb);
 }
 
-static void prueba_abb_iterar_interrupt()
+static void prueba_abb_iterar_int_interrupt()
 {
     abb_t* abb = abb_crear(strcmp, NULL);
 
@@ -305,7 +305,7 @@ static void prueba_abb_iterar_interrupt()
    	abb_destruir(abb);
 }
 
-void prueba_abb_volumen(int size_test) {
+void prueba_abb_iterar_int_volumen(int size_test) {
 	srand((int) time(NULL));   // should only be called once	
 	int vector[size_test];
 	int i;
@@ -344,6 +344,71 @@ void prueba_abb_volumen(int size_test) {
    	abb_destruir(abb);		
 }
 
+static void prueba_abb_iterar_ext_vacio()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+    abb_iter_t* iter = abb_iter_in_crear(abb);
+    print_test("Prueba abb iter crear iterador abb vacio", !iter);
+    print_test("Prueba abb iter esta al final", abb_iter_in_al_final(iter));
+    print_test("Prueba abb iter avanzar es false", !abb_iter_in_avanzar(iter));
+    print_test("Prueba abb iter ver actual es NULL", !abb_iter_in_ver_actual(iter));
+
+    abb_iter_in_destruir(iter);
+    abb_destruir(abb);
+}
+
+void prueba_abb_iterar_ext_volumen (int size_test) {
+    /********************************************************/
+    /*    INICIO DE CREACION DE COLA INORDER DE TESTEO      */
+    /********************************************************/
+    srand((int) time(NULL));   // should only be called once    
+    int vector[size_test];
+    int i;
+    for (i = 0; i < size_test; i++) {
+        vector[i] = (int) rand();      // returns a pseudo-random integer between 0 and RAND_MAX    
+    }
+    char* strvec[size_test];
+    for (i = 0; i < size_test; i++) {
+        char aux1[20];
+        sprintf(aux1, "%d", vector[i]);
+        strvec[i] = malloc(sizeof(char) * strlen(aux1) + 1);
+        strcpy(strvec[i], aux1);
+    }
+    abb_t* abb = abb_crear(strcmpaux, free);
+    i = 0;
+    bool ok = true;
+    while ((i < size_test) && ok) {
+        ok = abb_guardar(abb, strvec[i], strvec[i]);
+        i++;
+    }
+    printf("Cantidad de nodos en abb: %d\n", (int) abb_cantidad(abb));
+    cola_t* extra = cola_crear();
+    abb_in_order(abb, visitar_test, extra);
+
+    /********************************************************/
+    /*     FIN DE CREACION DE COLA INORDER DE TESTEO        */
+    /********************************************************/
+
+    abb_iter_t* iter = abb_iter_in_crear(abb);
+    ok = true;
+    while (!abb_iter_in_al_final(iter) && !cola_esta_vacia(extra) && ok) {
+        char* aux = (char*) cola_desencolar(extra);
+        char* aux2 = (char*) abb_iter_in_ver_actual(iter);
+        ok = (strcmpaux(aux, aux2) == 0);
+        free(aux);
+        abb_iter_in_avanzar(iter);
+    }
+
+    print_test("Cola esta vacia", cola_esta_vacia(extra));
+    print_test("El iterador externo inorder iteró correctamente", ok);  
+    print_test("El iterador externo inorder esta al final",abb_iter_in_al_final(iter));
+
+    cola_destruir(extra, free);
+    abb_iter_in_destruir(iter);
+    abb_destruir(abb);      
+}
+
+
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
  * *****************************************************************/
@@ -357,9 +422,9 @@ void prueba_abb_volumen(int size_test) {
     prueba_abb_borrar();
     prueba_abb_clave_vacia();
     prueba_abb_valor_null();
-    prueba_abb_iterar_completo();
-    prueba_abb_iterar_interrupt();
-    prueba_abb_volumen(5000);
-    //prueba_iterar_abb_vacio();
-    //prueba_abb_iterar_volumen(5000);
+    prueba_abb_iterar_int_completo();
+    prueba_abb_iterar_int_interrupt();
+    prueba_abb_iterar_int_volumen(5000);
+    prueba_abb_iterar_ext_vacio();
+    prueba_abb_iterar_ext_volumen(5000);
  }
