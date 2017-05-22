@@ -5,8 +5,8 @@ PRUEBAS = pruebas_alumno
 EXE = pruebas
 
 
-all: tda testing.o main.o pruebas.o pila.o
-	$(CC) $(CFLAGS) -o $(EXE) $(PRUEBAS).o $(TDA).o testing.o main.o pila.o
+all: tda testing.o main.o pruebas.o pila.o cola.o
+	$(CC) $(CFLAGS) -o $(EXE) $(PRUEBAS).o $(TDA).o testing.o main.o pila.o cola.o
 
 tda:
 	$(CC) $(CFLAGS) $(TDA).c -c
@@ -22,6 +22,9 @@ pruebas.o:
 
 pila.o:
 	$(CC) $(CFLAGS) pila.c -c
+
+cola.o:
+	$(CC) $(CFLAGS) cola.c -c	
 
 clean:
 	rm $(EXE) *.o

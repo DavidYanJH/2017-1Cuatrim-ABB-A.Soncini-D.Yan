@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "cola.h"
 
 /* ******************************************************************
  *                        PRUEBAS UNITARIAS
@@ -189,6 +190,105 @@ static void prueba_abb_valor_null(void)
     abb_destruir(abb);
 }
 
+bool visitar_test(const char* clave, void* dato, void* extra) {
+	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
+	strcpy(datocpy, dato);
+	return cola_encolar((cola_t*) extra, datocpy);
+}
+
+static void prueba_abb_iterar_completo()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    char *claves[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+    char *valores[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+
+    //Este vector ordenado contiene las claves odenadas de menor a mayor. El resultado del in-order debe ser igual al orden de este vector.
+    char *ordenados[] = {"110", "111", "1111", "1113", "1122", "1233", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5555", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    
+    cola_t* extra = cola_crear();
+
+    /* Inserta 25 valores */
+    int i = 0;
+    bool ok = true;
+    while ((i < 25) && ok) {
+    	//inserto mismo char* clave / valor
+    	ok = abb_guardar(abb, claves[i], valores[i]);
+    	i++;
+   	}
+
+    print_test("Se insertaron todos las duplas valor / clave", ok);
+    print_test("Cantidad de elementos insertados es 25", 25 == abb_cantidad(abb));
+
+    abb_in_order(abb, visitar_test, extra);
+
+    i = 0;
+    ok = true;
+    while (!cola_esta_vacia(extra) && ok) {
+    	char* aux = (char*) cola_desencolar(extra);
+    	ok = (strcmp(aux, ordenados[i++]) == 0);
+    	free(aux);
+    }
+
+    print_test("Se iteró inorder correctamente", ok);
+    
+    cola_destruir(extra, free);
+
+   	abb_destruir(abb);
+}
+
+bool visitar_test_interrupt(const char* clave, void* dato, void* extra) {
+	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
+	strcpy(datocpy, dato);
+	//Itero hasta el nodo raiz
+	if (strcmp(clave, "5555") == 0)
+		return !cola_encolar((cola_t*) extra, datocpy);
+	return cola_encolar((cola_t*) extra, datocpy);
+}
+
+static void prueba_abb_iterar_interrupt()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    char *claves[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+    char *valores[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+
+    //Este vector ordenado contiene las claves odenadas de menor a mayor. El resultado del in-order debe ser igual al orden de este vector.
+    char *ordenados[] = {"110", "111", "1111", "1113", "1122", "1233", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5555", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    
+    cola_t* extra = cola_crear();
+
+    /* Inserta 25 valores */
+    int i = 0;
+    bool ok = true;
+    while ((i < 25) && ok) {
+    	//inserto mismo char* clave / valor
+    	ok = abb_guardar(abb, claves[i], valores[i]);
+    	i++;
+   	}
+
+    print_test("Se insertaron todos las duplas valor / clave", ok);
+    print_test("Cantidad de elementos insertados es 25", 25 == abb_cantidad(abb));
+
+    abb_in_order(abb, visitar_test_interrupt, extra);
+
+    i = 0;
+    ok = true;
+    char* aux = NULL;
+    while (!cola_esta_vacia(extra) && ok) {
+    	free(aux);
+    	aux = (char*) cola_desencolar(extra);
+    	ok = (strcmp(aux, ordenados[i++]) == 0);
+    }
+
+    print_test("Se iteró hasta nodo raiz", strcmp(aux, "5555") == 0);
+    free(aux);
+    
+    cola_destruir(extra, free);
+
+   	abb_destruir(abb);
+}
+
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
  * *****************************************************************/
@@ -204,6 +304,7 @@ static void prueba_abb_valor_null(void)
     prueba_abb_clave_vacia();
     prueba_abb_valor_null();
     //prueba_abb_volumen(5000, true);
-    //prueba_abb_iterar();
+    prueba_abb_iterar_completo();
+    prueba_abb_iterar_interrupt();
     //prueba_abb_iterar_volumen(5000);
  }

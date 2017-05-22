@@ -131,6 +131,14 @@ void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* root) {
 	free (root);
 }
 
+void iterar_nodo_abb_in(nodo_abb_t* root, bool visitar(const char *, void *, void *), void *extra) {
+	if (!root) return;
+	if (root->izq) {
+		iterar_nodo_abb_in(root->izq, visitar, extra);
+	}
+	if (visitar(root->clave, root->dato, extra))
+		iterar_nodo_abb_in(root->der, visitar, extra);	
+}
 
 
 /* ******************************************************************
@@ -275,4 +283,9 @@ void abb_iter_in_destruir(abb_iter_t* abb_iter)
 	if (!abb_iter) return;
 	if (abb_iter->pila_abb) pila_destruir(abb_iter->pila_abb);
 	free(abb_iter);
+}
+
+void abb_in_order(abb_t *abb, bool visitar(const char *, void *, void *), void *extra) {
+	if (abb->root)
+		iterar_nodo_abb_in(abb->root, visitar, extra);
 }
