@@ -35,6 +35,23 @@ int strcmpaux (const char* clave, const char* straux) {
 	else return 0;
 }
 
+bool visitar_print(const char* clave, void* dato, void* aux) {
+    printf(" %s |", clave);
+    return true;
+}
+
+void prueba_abb_eliminar_hojas_aux(cola_t* extra, char** ordenados) {
+    int i = 0;
+    bool ok = true;
+    char* aux = NULL;
+    while (!cola_esta_vacia(extra) && ok) {
+        aux = (char*) cola_desencolar(extra);
+        ok = (strcmp(aux, ordenados[i++]) == 0);
+        free(aux);
+    }
+    print_test("Se itero todo el arbol luego de una eliminacion", ok);
+}
+
 /* ******************************************************************
  *                        PRUEBAS UNITARIAS
  * *****************************************************************/
@@ -408,6 +425,108 @@ void prueba_abb_iterar_ext_volumen (int size_test) {
     abb_destruir(abb);      
 }
 
+static void prueba_abb_eliminar_hojas()
+{
+    abb_t* abb = abb_crear(strcmp, NULL);
+
+    int n = 25;
+
+    char *claves[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+    char *valores[] = {"5555", "2222", "8888", "6666", "5666", "7777", "7788", "7789", "9888", "9997", "9999", "1111", "110", "111", "1233", "1122", "1113", "1444", "1237", "1235", "1236", "1445", "1456", "3333", "4444"};
+    //Este vector ordenado contiene las claves odenadas de menor a mayor. El resultado del in-order debe ser igual al orden de este vector.
+    char *ordenados[] = {"110", "111", "1111", "1113", "1122", "1233", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5555", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados1[] = {"110", "111", "1111", "1113", "1122", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5555", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados2[] = {"110", "111", "1111", "1113", "1122", "1235", "1236", "1237", "1444", "1445", "1456", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados3[] = {"110", "111", "1111", "1113", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados4[] = {"110", "111", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados5[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997", "9999"};
+    char *ordenados6[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "8888", "9888", "9997"};
+    char *ordenados7[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "5666", "6666", "7777", "7788", "7789", "9888", "9997"};
+    char *ordenados8[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "6666", "7777", "7788", "7789", "9888", "9997"};
+    char *ordenados9[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "4444", "6666", "7777", "7788", "7789", "9997"};
+    char *ordenados10[] = {"110", "1111", "1122", "1235", "1236", "1237", "1444", "1445", "2222", "3333", "6666", "7777", "7788", "7789", "9997"};
+
+    /* Inserta n valores */
+    int i = 0;
+    bool ok = true;
+    while ((i < n) && ok) {
+        //inserto mismo char* clave / valor
+        ok = abb_guardar(abb, claves[i], valores[i]);
+        i++;
+    }
+
+    print_test("Se insertaron todos las duplas valor / clave", ok);
+    print_test("Se insertaron 25 elementos en el arbol", 25 == i);
+
+    cola_t* extra = cola_crear();
+
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados);
+    
+    //Elimino raiz de subarbol izquierdo con dos nodos hijos.
+    char* borrado = abb_borrar(abb, "1233");
+    print_test("Se elimino nodo con clave 1233", strcmp(borrado, "1233") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados1);
+    
+    //Elimino nodo raiz
+    borrado = abb_borrar(abb, "5555");
+    print_test("Se elimino nodo con clave 5555", strcmp(borrado, "5555") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados2);
+    
+    //Elimino nodo hoja derecha
+    borrado = abb_borrar(abb, "1456");
+    print_test("Se elimino nodo con clave 1456", strcmp(borrado, "1456") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados3);
+    
+    //Elimino nodo hoja izquierda
+    borrado = abb_borrar(abb, "1113");
+    print_test("Se elimino nodo con clave 1113", strcmp(borrado, "1113") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados4);
+    
+    //Elimino hoja izquierda del menor elemento del arbol
+    borrado = abb_borrar(abb, "111");
+    print_test("Se elimino nodo con clave 111", strcmp(borrado, "111") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados5);
+    
+    //Elimino hoja derecha, mayor elemento del arbol.
+    borrado = abb_borrar(abb, "9999");
+    print_test("Se elimino nodo con clave 9999", strcmp(borrado, "9999") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados6);
+    
+    //Elimino root del subarbol derecho mayor.
+    borrado = abb_borrar(abb, "8888");
+    print_test("Se elimino nodo con clave 8888", strcmp(borrado, "8888") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados7);
+    
+    //Elimino hoja izquierda de nodo con dos hijos (menor elemento de subarbol derecho)
+    borrado = abb_borrar(abb, "5666");
+    print_test("Se elimino nodo con clave 5666", strcmp(borrado, "5666") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados8);
+    
+    //Vuelvo a eliminar root del subarbol derecho mayor, luego de un reemplazo anterior.
+    borrado = abb_borrar(abb, "9888");
+    print_test("Se elimino nodo con clave 9888", strcmp(borrado, "9888") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados9);
+    
+    //Vuelvo a eliminar raiz del arbol
+    borrado = abb_borrar(abb, "4444");
+    print_test("Se elimino nodo con clave 4444", strcmp(borrado, "4444") == 0);
+    abb_in_order(abb, visitar_test, extra);
+    prueba_abb_eliminar_hojas_aux(extra, ordenados10);
+
+    cola_destruir(extra, free);
+    abb_destruir(abb);
+}
+
 
 /* ******************************************************************
  *                        FUNCIÓN PRINCIPAL
@@ -427,4 +546,5 @@ void prueba_abb_iterar_ext_volumen (int size_test) {
     prueba_abb_iterar_int_volumen(5000);
     prueba_abb_iterar_ext_vacio();
     prueba_abb_iterar_ext_volumen(5000);
+    prueba_abb_eliminar_hojas();
  }

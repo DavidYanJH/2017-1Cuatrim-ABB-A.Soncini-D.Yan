@@ -82,17 +82,9 @@ bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* c
 	return true;
 }
 
-void swap(void* var_x, void* var_y)
-{
-	void* aux = var_x;
-	var_x = var_y;
-	var_y = aux;
-}
-
-nodo_abb_t* buscar_max_izq(nodo_abb_t* nodo)
-{
-	if (nodo->der) return buscar_max_izq(nodo->der);
-	return nodo;
+bool isleft(abb_t* abb, nodo_abb_t* hijo, nodo_abb_t* padre) {
+	if (!padre->izq) return false;
+	return (abb->comparar_clave(hijo->clave, padre->izq->clave) == 0);
 }
 
 nodo_abb_t* buscarReemplazoDerecho(nodo_abb_t* root) {
@@ -100,38 +92,19 @@ nodo_abb_t* buscarReemplazoDerecho(nodo_abb_t* root) {
 	return buscarReemplazoDerecho(root->izq);
 }
 
+nodo_abb_t* buscarReemplazoIzquierdo(nodo_abb_t* root) {
+	if (!root->der) return root;
+	return buscarReemplazoIzquierdo(root->der);
+}
+
 void borrarHoja(abb_t* abb, nodo_abb_t* nodo_borrar) {
 	if (nodo_borrar->padre) {
-		if (nodo_borrar == nodo_borrar->padre->izq) //isLeft
+		if (isleft(abb, nodo_borrar, nodo_borrar->padre)) //isLeft
 			nodo_borrar->padre->izq = NULL;
 		else
 			nodo_borrar->padre->der = NULL;
 	}
 	else abb->root = NULL;
-}
-
-void borrarPadreConHijo(abb_t* abb, nodo_abb_t* nodo_borrar, nodo_abb_t* nodo_borrar_hijo) {
-	if (nodo_borrar->padre) {
-		if (nodo_borrar == nodo_borrar->padre->izq) //isLeft
-			nodo_borrar->padre->izq = nodo_borrar_hijo;
-		else
-			nodo_borrar->padre->der = nodo_borrar_hijo;
-	}
-	else abb->root = nodo_borrar_hijo;
-	nodo_borrar_hijo->padre = nodo_borrar->padre;
-}
-
-void borrarPadreDosHijos(nodo_abb_t* nodo_borrar) {
-	nodo_abb_t* reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
-	nodo_borrar->clave = reemplazo->clave;
-	nodo_borrar->dato = reemplazo->dato;
-	if (reemplazo->padre != nodo_borrar)
-		reemplazo->padre->izq = reemplazo->der;
-	else
-		nodo_borrar->der = reemplazo->der;
-	if (reemplazo->der)
-		reemplazo->der->padre = reemplazo->padre;
-	nodo_borrar = reemplazo;
 }
 
 void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* root) {
@@ -169,7 +142,7 @@ abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato) {
 	return abb;
 }
 
-size_t abb_cantidad(const abb_t *abb) {
+size_t abb_cantidad(abb_t *abb) {
 	if (!abb) return 0;
 	return abb->cantidad_nodos;
 }
@@ -193,7 +166,7 @@ bool abb_guardar(abb_t *abb, const char *clave, void *dato) {
 	return abb_insertar(abb->root, NULL, abb, clave, dato);
 }
 
-void *abb_borrar(abb_t *abb, const char *clave) {
+void* abb_borrar(abb_t *abb, const char *clave) {
 	nodo_abb_t* nodo_borrar = buscar_nodo(abb->root, abb->comparar_clave, clave);
 	if (!nodo_borrar) return NULL;
 	void* dato = nodo_borrar->dato;
@@ -202,19 +175,32 @@ void *abb_borrar(abb_t *abb, const char *clave) {
 	//Nodo a borrar no tiene hijos
 	if (!nodo_borrar->izq && !nodo_borrar->der)
 		borrarHoja(abb, nodo_borrar);
-	
-	//Nodo a borrar solo tiene hijo izquierdo
-	if (nodo_borrar->izq && !nodo_borrar->der)
-		borrarPadreConHijo(abb, nodo_borrar, nodo_borrar->izq);
-	
-	//Nodo a borrar solo tiene hijo derecho
-	if (!nodo_borrar->izq && nodo_borrar->der)  
-		borrarPadreConHijo(abb, nodo_borrar, nodo_borrar->der);
 
-	//Nodo a borrar tene dos hijos
-	if (nodo_borrar->izq && nodo_borrar->der)
-		borrarPadreDosHijos(nodo_borrar);
+	else { 
+		nodo_abb_t* reemplazo = NULL;
 	
+		//Nodo a borrar solo tiene hijo izquierdo
+		if (nodo_borrar->izq && !nodo_borrar->der)
+			reemplazo = buscarReemplazoIzquierdo(nodo_borrar->izq);
+	
+		//Nodo a borrar solo tiene hijo derecho
+		else if (!nodo_borrar->izq && nodo_borrar->der)  
+			reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
+
+		//Nodo a borrar tene dos hijos
+		else if (nodo_borrar->izq && nodo_borrar->der)
+			reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
+
+		if (isleft(abb, reemplazo, reemplazo->padre))
+			reemplazo->padre->izq = reemplazo->der;
+		else
+			reemplazo->padre->der = reemplazo->der;
+		if (reemplazo->der)
+				reemplazo->der->padre = reemplazo->padre;
+		nodo_borrar->clave = reemplazo->clave;
+		nodo_borrar->dato = reemplazo->dato;
+		nodo_borrar = reemplazo;
+	}
 	free(clave_borrar);
 	free(nodo_borrar);
 	abb->cantidad_nodos--;
@@ -250,7 +236,7 @@ bool pila_cargar_inorder(nodo_abb_t* nodo_actual, pila_t* pila_abb)
  * *****************************************************************/
 abb_iter_t* abb_iter_in_crear(const abb_t* abb)
 {
-	if (!abb || abb_cantidad(abb) == 0) return NULL;
+	if (!abb || abb->cantidad_nodos == 0) return NULL;
 	abb_iter_t* abb_iter = malloc(sizeof(abb_iter_t));
 	if (!abb_iter) return NULL;
 	abb_iter->pila_abb = pila_crear();
