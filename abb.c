@@ -82,6 +82,19 @@ bool abb_insertar(nodo_abb_t* nodo, nodo_abb_t* padre, abb_t* abb, const char* c
 	return true;
 }
 
+void swap(void* var_x, void* var_y)
+{
+	void* aux = var_x;
+	var_x = var_y;
+	var_y = aux;
+}
+
+nodo_abb_t* buscar_max_izq(nodo_abb_t* nodo)
+{
+	if (nodo->der) return buscar_max_izq(nodo->der);
+	return nodo;
+}
+
 nodo_abb_t* buscarReemplazoDerecho(nodo_abb_t* root) {
 	if (!root->izq) return root;
 	return buscarReemplazoDerecho(root->izq);
