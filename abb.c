@@ -180,23 +180,24 @@ void* abb_borrar(abb_t *abb, const char *clave) {
 		nodo_abb_t* reemplazo = NULL;
 	
 		//Nodo a borrar solo tiene hijo izquierdo
-		if (nodo_borrar->izq && !nodo_borrar->der)
+		if (nodo_borrar->izq && !nodo_borrar->der) {
 			reemplazo = buscarReemplazoIzquierdo(nodo_borrar->izq);
-	
-		//Nodo a borrar solo tiene hijo derecho
-		else if (!nodo_borrar->izq && nodo_borrar->der)  
+			if (isleft(abb, reemplazo, reemplazo->padre))
+				reemplazo->padre->izq = reemplazo->izq;
+			else
+				reemplazo->padre->der = reemplazo->izq;
+			if (reemplazo->izq)
+				reemplazo->izq->padre = reemplazo->padre;
+		}
+		else {
 			reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
-
-		//Nodo a borrar tene dos hijos
-		else if (nodo_borrar->izq && nodo_borrar->der)
-			reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
-
-		if (isleft(abb, reemplazo, reemplazo->padre))
-			reemplazo->padre->izq = reemplazo->der;
-		else
-			reemplazo->padre->der = reemplazo->der;
-		if (reemplazo->der)
+			if (isleft(abb, reemplazo, reemplazo->padre))
+				reemplazo->padre->izq = reemplazo->der;
+			else
+				reemplazo->padre->der = reemplazo->der;
+			if (reemplazo->der)
 				reemplazo->der->padre = reemplazo->padre;
+		}
 		nodo_borrar->clave = reemplazo->clave;
 		nodo_borrar->dato = reemplazo->dato;
 		nodo_borrar = reemplazo;

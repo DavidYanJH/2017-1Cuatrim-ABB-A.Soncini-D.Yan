@@ -525,6 +525,28 @@ static void prueba_abb_eliminar_hojas()
 
     cola_destruir(extra, free);
     abb_destruir(abb);
+
+    abb = abb_crear(strcmp, NULL);
+    ok = abb_guardar(abb, "3", "3");
+    ok = abb_guardar(abb, "2", "2");
+    ok = abb_guardar(abb, "1", "1");
+
+    borrado = abb_borrar(abb, "3");
+    borrado = abb_borrar(abb, "1");
+    print_test("Se elimino nodo con clave 1", strcmp(borrado, "1") == 0);
+
+    abb_destruir(abb);
+
+    abb = abb_crear(strcmp, NULL);
+    ok = abb_guardar(abb, "3", "3");
+    ok = abb_guardar(abb, "4", "4");
+    ok = abb_guardar(abb, "5", "5");
+
+    borrado = abb_borrar(abb, "3");
+    borrado = abb_borrar(abb, "5");
+    print_test("Se elimino nodo con clave 5", strcmp(borrado, "5") == 0);
+
+    abb_destruir(abb);
 }
 
 
