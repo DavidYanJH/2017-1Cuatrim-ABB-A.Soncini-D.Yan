@@ -87,24 +87,28 @@ bool isleft(abb_t* abb, nodo_abb_t* hijo, nodo_abb_t* padre) {
 	return (abb->comparar_clave(hijo->clave, padre->izq->clave) == 0);
 }
 
-nodo_abb_t* buscarReemplazoDerecho(nodo_abb_t* root) {
+nodo_abb_t* buscar_min(nodo_abb_t* root) {
 	if (!root->izq) return root;
-	return buscarReemplazoDerecho(root->izq);
+	return buscar_min(root->izq);
 }
 
-nodo_abb_t* buscarReemplazoIzquierdo(nodo_abb_t* root) {
+nodo_abb_t* buscar_max(nodo_abb_t* root) {
 	if (!root->der) return root;
-	return buscarReemplazoIzquierdo(root->der);
+	return buscar_max(root->der);
 }
 
-void borrarHoja(abb_t* abb, nodo_abb_t* nodo_borrar) {
-	if (nodo_borrar->padre) {
-		if (isleft(abb, nodo_borrar, nodo_borrar->padre)) //isLeft
-			nodo_borrar->padre->izq = NULL;
-		else
-			nodo_borrar->padre->der = NULL;
+void borrado_nodo(nodo_abb_t* nodo, abb_t* abb) {
+	nodo_abb_t* hijo;
+	if (!nodo->izq) hijo = nodo->der;
+	else hijo = nodo->izq;
+	if (nodo->padre) {
+		if (isleft(abb, nodo, nodo->padre)) 
+			nodo->padre->izq = hijo;
+		else nodo->padre->der = hijo; 
 	}
-	else abb->root = NULL;
+	else abb->root = hijo;
+	if (hijo) hijo->padre = nodo->padre;
+	free(nodo);
 }
 
 void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* root) {
@@ -166,47 +170,27 @@ bool abb_guardar(abb_t *abb, const char *clave, void *dato) {
 	return abb_insertar(abb->root, NULL, abb, clave, dato);
 }
 
-void* abb_borrar(abb_t *abb, const char *clave) {
-	nodo_abb_t* nodo_borrar = buscar_nodo(abb->root, abb->comparar_clave, clave);
-	if (!nodo_borrar) return NULL;
-	void* dato = nodo_borrar->dato;
-	char* clave_borrar = nodo_borrar->clave;
 
-	//Nodo a borrar no tiene hijos
-	if (!nodo_borrar->izq && !nodo_borrar->der)
-		borrarHoja(abb, nodo_borrar);
+void* abb_borrar(abb_t* abb, const char* clave) {
+	if (!abb) return NULL;
+	nodo_abb_t* nodo = buscar_nodo(abb->root, abb->comparar_clave, clave);
+	if (!nodo) return NULL;
+	void* dato = nodo->dato;
+	char* key = nodo->clave;
 
-	else { 
-		nodo_abb_t* reemplazo = NULL;
-	
-		//Nodo a borrar solo tiene hijo izquierdo
-		if (nodo_borrar->izq && !nodo_borrar->der) {
-			reemplazo = buscarReemplazoIzquierdo(nodo_borrar->izq);
-			if (isleft(abb, reemplazo, reemplazo->padre))
-				reemplazo->padre->izq = reemplazo->izq;
-			else
-				reemplazo->padre->der = reemplazo->izq;
-			if (reemplazo->izq)
-				reemplazo->izq->padre = reemplazo->padre;
-		}
-		else {
-			reemplazo = buscarReemplazoDerecho(nodo_borrar->der);
-			if (isleft(abb, reemplazo, reemplazo->padre))
-				reemplazo->padre->izq = reemplazo->der;
-			else
-				reemplazo->padre->der = reemplazo->der;
-			if (reemplazo->der)
-				reemplazo->der->padre = reemplazo->padre;
-		}
-		nodo_borrar->clave = reemplazo->clave;
-		nodo_borrar->dato = reemplazo->dato;
-		nodo_borrar = reemplazo;
+	if (nodo->izq && nodo->der) { 
+		nodo_abb_t* reemplazo = buscar_max(nodo->izq);
+		nodo->clave = reemplazo->clave;
+		nodo->dato = reemplazo->dato;
+		borrado_nodo(reemplazo, abb);
 	}
-	free(clave_borrar);
-	free(nodo_borrar);
-	abb->cantidad_nodos--;
+	else borrado_nodo(nodo, abb);
+	
+	free(key);
+	--abb->cantidad_nodos;
 	return dato;
 }
+
 
 void abb_destruir(abb_t* abb) {
 	if (!abb) return;
@@ -237,7 +221,7 @@ bool pila_cargar_inorder(nodo_abb_t* nodo_actual, pila_t* pila_abb)
  * *****************************************************************/
 abb_iter_t* abb_iter_in_crear(const abb_t* abb)
 {
-	if (!abb || abb->cantidad_nodos == 0) return NULL;
+	if (!abb) return NULL;
 	abb_iter_t* abb_iter = malloc(sizeof(abb_iter_t));
 	if (!abb_iter) return NULL;
 	abb_iter->pila_abb = pila_crear();
