@@ -25,12 +25,12 @@ struct abb {
 /* ******************************************************************
  *            DECLARACION DE LAS FUNCIONES AUXILIARES
  * *****************************************************************/
-nodo_abb_t* buscar_nodo(nodo_abb_t* root, int (*cmp) (const char *, const char *), const char* clave) {
-	if (!root) return NULL;
-	int cmp_result = cmp(root->clave, clave);
-	if (cmp_result == 0) return root;
-	if (cmp_result < 0) return buscar_nodo(root->der, cmp, clave);
-	return buscar_nodo(root->izq, cmp, clave);
+nodo_abb_t* buscar_nodo(nodo_abb_t* nodo, int (*cmp) (const char *, const char *), const char* clave) {
+	if (!nodo) return NULL;
+	int cmp_result = cmp(nodo->clave, clave);
+	if (cmp_result == 0) return nodo;
+	if (cmp_result < 0) return buscar_nodo(nodo->der, cmp, clave);
+	return buscar_nodo(nodo->izq, cmp, clave);
 }
 
 nodo_abb_t* nodo_abb_crear(abb_t* abb, nodo_abb_t* padre, const char* clave, void* dato) 
@@ -87,14 +87,14 @@ bool isleft(abb_t* abb, nodo_abb_t* hijo, nodo_abb_t* padre) {
 	return (abb->comparar_clave(hijo->clave, padre->izq->clave) == 0);
 }
 
-nodo_abb_t* buscar_min(nodo_abb_t* root) {
-	if (!root->izq) return root;
-	return buscar_min(root->izq);
+nodo_abb_t* buscar_min(nodo_abb_t* nodo) {
+	if (!nodo->izq) return nodo;
+	return buscar_min(nodo->izq);
 }
 
-nodo_abb_t* buscar_max(nodo_abb_t* root) {
-	if (!root->der) return root;
-	return buscar_max(root->der);
+nodo_abb_t* buscar_max(nodo_abb_t* nodo) {
+	if (!nodo->der) return nodo;
+	return buscar_max(nodo->der);
 }
 
 void borrado_nodo(nodo_abb_t* nodo, abb_t* abb) {
@@ -111,23 +111,23 @@ void borrado_nodo(nodo_abb_t* nodo, abb_t* abb) {
 	free(nodo);
 }
 
-void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* root) {
-	if (!root) return;
-	eliminar_nodo_abb(abb, root->izq);
-	eliminar_nodo_abb(abb, root->der);
+void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* nodo) {
+	if (!nodo) return;
+	eliminar_nodo_abb(abb, nodo->izq);
+	eliminar_nodo_abb(abb, nodo->der);
 	if (abb->destruir_dato)
-		abb->destruir_dato(root->dato);
-	free(root->clave);
-	free (root);
+		abb->destruir_dato(nodo->dato);
+	free(nodo->clave);
+	free (nodo);
 }
 
-void iterar_nodo_abb_in(nodo_abb_t* root, bool visitar(const char *, void *, void *), void *extra) {
-	if (!root) return;
-	if (root->izq) {
-		iterar_nodo_abb_in(root->izq, visitar, extra);
+void iterar_nodo_abb_in(nodo_abb_t* nodo, bool visitar(const char *, void *, void *), void *extra) {
+	if (!nodo) return;
+	if (nodo->izq) {
+		iterar_nodo_abb_in(nodo->izq, visitar, extra);
 	}
-	if (visitar(root->clave, root->dato, extra))
-		iterar_nodo_abb_in(root->der, visitar, extra);	
+	if (visitar(nodo->clave, nodo->dato, extra))
+		iterar_nodo_abb_in(nodo->der, visitar, extra);	
 }
 
 
