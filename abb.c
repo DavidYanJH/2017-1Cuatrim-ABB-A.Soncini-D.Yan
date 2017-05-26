@@ -172,7 +172,6 @@ bool abb_guardar(abb_t *abb, const char *clave, void *dato) {
 
 
 void* abb_borrar(abb_t* abb, const char* clave) {
-	if (!abb) return NULL;
 	nodo_abb_t* nodo = buscar_nodo(abb->root, abb->comparar_clave, clave);
 	if (!nodo) return NULL;
 	void* dato = nodo->dato;
