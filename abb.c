@@ -121,13 +121,13 @@ void eliminar_nodo_abb(abb_t* abb, nodo_abb_t* nodo) {
 	free (nodo);
 }
 
-void iterar_nodo_abb_in(nodo_abb_t* nodo, bool visitar(const char *, void *, void *), void *extra) {
-	if (!nodo) return;
-	if (nodo->izq) {
-		iterar_nodo_abb_in(nodo->izq, visitar, extra);
+void iterar_abb_inorder(nodo_abb_t* nodo, bool visitar(const char *, void *, void *), void *extra, bool *continuar) {
+	if (!nodo || !*continuar) return;
+	iterar_abb_inorder(nodo->izq, visitar, extra, continuar);
+	if (*continuar) {
+		*continuar = visitar(nodo->clave, nodo->dato, extra);
+		iterar_abb_inorder(nodo->der, visitar, extra, continuar);
 	}
-	if (visitar(nodo->clave, nodo->dato, extra))
-		iterar_nodo_abb_in(nodo->der, visitar, extra);	
 }
 
 
@@ -272,7 +272,10 @@ void abb_iter_in_destruir(abb_iter_t* abb_iter)
 /* ******************************************************************
  *          ITERADOR INTERNO DEL ARBOL BINARIO DE BUSQUEDA
  * *****************************************************************/
- void abb_in_order(abb_t *abb, bool visitar(const char *, void *, void *), void *extra) {
-	if (abb->root)
-		iterar_nodo_abb_in(abb->root, visitar, extra);
+ void abb_in_order(abb_t* abb, bool visitar(const char *, void *, void *), void *extra) {
+	if (abb->root) {
+		bool continuar = true;
+		iterar_abb_inorder(abb->root, visitar, extra, &continuar);
+	}
 }
+

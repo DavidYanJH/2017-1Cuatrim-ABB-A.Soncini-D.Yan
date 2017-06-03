@@ -19,7 +19,7 @@ bool visitar_test_interrupt(const char* clave, void* dato, void* extra) {
 	char* datocpy = malloc(sizeof(char)* strlen(dato) + 1);
 	strcpy(datocpy, dato);
 	//Itero hasta el nodo raiz
-	if (strcmp(clave, "5555") == 0)
+	if (strcmp(clave, "110") == 0)
 		return !cola_encolar((cola_t*) extra, datocpy);
 	return cola_encolar((cola_t*) extra, datocpy);
 }
@@ -314,7 +314,7 @@ static void prueba_abb_iterar_int_interrupt()
     	ok = (strcmp(aux, ordenados[i++]) == 0);
     }
 
-    print_test("Se iteró hasta nodo raiz", strcmp(aux, "5555") == 0);
+    print_test("Se iteró hasta nodo menor", strcmp(aux, "110") == 0);
     free(aux);
     
     cola_destruir(extra, free);
